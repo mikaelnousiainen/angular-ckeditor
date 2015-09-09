@@ -39,7 +39,7 @@
         var ngModelController = ctrls[1];
 
         // Initialize the editor content when it is ready.
-        controller.ready().then(function initialize() {
+        controller.ready().then(function initialize(instance) {
           // Sync view on specific events.
           ['dataReady', 'change', 'blur', 'saveSnapshot'].forEach(function (event) {
             controller.onCKEvent(event, function syncView() {
@@ -55,7 +55,7 @@
           // Defer the ready handler calling to ensure that the editor is
           // completely ready and populated with data.
           setImmediate(function () {
-            $parse(attrs.ready)(scope);
+            $parse(attrs.ready)(scope, {instance: instance});
           });
         });
 
@@ -121,7 +121,7 @@
     };
 
     this.onCKEvent('instanceReady', function() {
-      readyDeferred.resolve(true);
+      readyDeferred.resolve(instance);
     });
 
     /**
@@ -135,10 +135,7 @@
 
     // Destroy editor when the scope is destroyed.
     $scope.$on('$destroy', function onDestroy() {
-      // do not delete too fast or pending events will throw errors
-      readyDeferred.promise.then(function() {
-        instance.destroy(false);
-      });
+      instance.destroy(false);
     });
   }
 }));
