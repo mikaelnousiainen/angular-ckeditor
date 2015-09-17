@@ -6,8 +6,8 @@
 }(this, function (angular) {
 
   angular
-  .module('ckeditor', [])
-  .directive('ckeditor', ['$parse', ckeditorDirective]);
+    .module('ckeditor', [])
+    .directive('ckeditor', ['$parse', ckeditorDirective]);
 
   // Polyfill setImmediate function.
   var setImmediate = window && window.setImmediate ? window.setImmediate : function (fn) {
@@ -79,12 +79,13 @@
     var instance;
     var readyDeferred = $q.defer(); // a deferred to be resolved when the editor is ready
 
+    var inline = editorElement.hasAttribute('contenteditable') &&
+      editorElement.getAttribute('contenteditable').toLowerCase() == 'true';
+
     // Create editor instance.
-    if (editorElement.hasAttribute('contenteditable') &&
-        editorElement.getAttribute('contenteditable').toLowerCase() == 'true') {
+    if (inline) {
       instance = this.instance = CKEDITOR.inline(editorElement, config);
-    }
-    else {
+    } else {
       instance = this.instance = CKEDITOR.replace(editorElement, config);
     }
 
@@ -135,7 +136,14 @@
 
     // Destroy editor when the scope is destroyed.
     $scope.$on('$destroy', function onDestroy() {
-      instance.destroy(false);
+      if (inline) {
+        // It seems that destroying an inline editor must be delayed for a while
+        readyDeferred.promise.then(function () {
+          instance.destroy(false);
+        });
+      } else {
+        instance.destroy(false);
+      }
     });
   }
 }));
